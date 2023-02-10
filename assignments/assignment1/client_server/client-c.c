@@ -69,9 +69,11 @@ int client(char *server_ip, char *server_port)
   while (fgets(buffer, SEND_BUFFER_SIZE, stdin) != NULL)
   {
     // TODO: should this return failure???
+    printf("%s", buffer);
     if (send(sockfd, buffer, SEND_BUFFER_SIZE, 0) == -1)
     {
       perror("error with sending data to server");
+      close(sockfd);
       return 2;
     }
   }

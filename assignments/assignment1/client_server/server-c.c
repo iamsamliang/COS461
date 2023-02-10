@@ -48,6 +48,7 @@ int server(char *server_port)
   int yes = 1;
   char buffer[RECV_BUFFER_SIZE];
   int num_rec_bytes;
+  char s[INET6_ADDRSTRLEN];
 
   memset(&hints, 0, sizeof hints); // make sure the struct is empty
   hints.ai_family = AF_UNSPEC;     // don't care IPv4 or IPv6
@@ -112,7 +113,7 @@ int server(char *server_port)
   //   return 1;
   // }
 
-  printf("server: waiting for connections...\n");
+  // printf("server: waiting for connections...\n");
 
   while (1)
   { // main accept() loop
@@ -133,7 +134,7 @@ int server(char *server_port)
 
     while (1)
     {
-      memset(buffer, 0, RECV_BUFFER_SIZE);
+      // memset(buffer, 0, RECV_BUFFER_SIZE);
       num_rec_bytes = recv(new_fd, buffer, RECV_BUFFER_SIZE, 0);
 
       // TODO: should this return failure???
@@ -147,9 +148,18 @@ int server(char *server_port)
       }
       else
       {
-        fprintf(stdout, "%s", buffer);
+        // buffer[num_rec_bytes] = '\0';
+        // printf("%s", buffer);
+        // write(new_fd, buffer, num_rec_bytes);
+        fwrite(buffer, 1, num_rec_bytes, stdout);
+        fflush(stdout);
+        // fprintf(stdout, "%s", buffer);
       }
     }
+
+    // fflush(stdout);
+
+    // fwrite('\0', 1, 1, stdout);
 
     // if ((numbytes = recv(sockfd, buffer, SEND_BUFFER_SIZE - 1, 0)) == -1)
     // {
