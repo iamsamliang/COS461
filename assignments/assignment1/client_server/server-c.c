@@ -18,17 +18,6 @@
 #define QUEUE_LENGTH 10
 #define RECV_BUFFER_SIZE 2048
 
-// void sigchld_handler(int s)
-// {
-//   // waitpid() might overwrite errno, so we save and restore it:
-//   int saved_errno = errno;
-
-//   while (waitpid(-1, NULL, WNOHANG) > 0)
-//     ;
-
-//   errno = saved_errno;
-// }
-
 /* TODO: server()
  * Open socket and wait for client to connect
  * Print received message to stdout
@@ -57,7 +46,7 @@ int server(char *server_port)
 
   if ((status = getaddrinfo(NULL, server_port, &hints, &servinfo)) != 0)
   {
-    fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
+    fprintf(stderr, "server getaddrinfo error: %s\n", gai_strerror(status));
     return 1;
   }
 
@@ -69,21 +58,21 @@ int server(char *server_port)
     if ((sockfd = socket(p->ai_family, p->ai_socktype,
                          p->ai_protocol)) == -1)
     {
-      perror("server: socket");
+      perror("server: error with using this socket");
       continue;
     }
 
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes,
                    sizeof(int)) == -1)
     {
-      perror("setsockopt");
+      perror("server: error setting this socket option");
       return 1;
     }
 
     if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1)
     {
       close(sockfd);
-      perror("server: bind");
+      perror("server: error binding to this socket");
       continue;
     }
 
@@ -94,29 +83,20 @@ int server(char *server_port)
 
   if (p == NULL)
   {
-    fprintf(stderr, "server: failed to bind\n");
+    fprintf(stderr, "server: failed to bind to any socket\n");
     return 1;
   }
 
+  // listen for connections
   if (listen(sockfd, QUEUE_LENGTH) == -1)
   {
-    perror("listen");
+    perror("error with trying to listen for client connections");
     return 1;
   }
 
-  // sa.sa_handler = sigchld_handler; // reap all dead processes
-  // sigemptyset(&sa.sa_mask);
-  // sa.sa_flags = SA_RESTART;
-  // if (sigaction(SIGCHLD, &sa, NULL) == -1)
-  // {
-  //   perror("sigaction");
-  //   return 1;
-  // }
-
-  // printf("server: waiting for connections...\n");
-
   while (1)
-  { // main accept() loop
+  {
+    // accept connections while continuing to listen for more connections and adding them to queue
     sin_size = sizeof their_addr;
     new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
 
@@ -126,45 +106,11 @@ int server(char *server_port)
       continue;
     }
 
-    // this prints client information
-    // inet_ntop(their_addr.ss_family,
-    //           get_in_addr((struct sockaddr *)&their_addr),
-    //           s, sizeof s);
-    // printf("server: got connection from %s\n", s);
-
-    // if (!fork())
-    // {                // this is the child process
-    //   close(sockfd); // child doesn't need the listener
-    //   while (1)
-    //   {
-    //     // memset(buffer, 0, RECV_BUFFER_SIZE);
-    //     num_rec_bytes = recv(new_fd, buffer, RECV_BUFFER_SIZE, 0);
-
-    //     // TODO: should this return failure???
-    //     if (num_rec_bytes == -1)
-    //     {
-    //       perror("error with receiving client data");
-    //     }
-    //     else if (num_rec_bytes == 0)
-    //     {
-    //       break;
-    //     }
-    //     else
-    //     {
-    //       fwrite(buffer, 1, num_rec_bytes, stdout);
-    //       fflush(stdout);
-    //     }
-    //   }
-    //   close(new_fd);
-    //   exit(0);
-    // }
-
+    // write to stdout as we receive the messages
     while (1)
     {
-      // memset(buffer, 0, RECV_BUFFER_SIZE);
       num_rec_bytes = recv(new_fd, buffer, RECV_BUFFER_SIZE, 0);
 
-      // TODO: should this return failure???
       if (num_rec_bytes == -1)
       {
         perror("error with receiving client data");
@@ -184,7 +130,8 @@ int server(char *server_port)
       }
     }
 
-    close(new_fd); // parent doesn't need this
+    // close connection to current client when done
+    close(new_fd);
   }
 
   return 0;

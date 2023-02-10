@@ -22,35 +22,41 @@ const RECV_BUFFER_SIZE = 2048
  * Print received message to stdout
  */
 func server(server_port string) {
-	ln, err := net.Listen("tcp", "localhost"+":"+server_port)
+	// listen on 127.0.0.1 on port server_port for client connections
+	sock, err := net.Listen("tcp", "127.0.0.1:"+server_port)
 	if err != nil {
-		log.Fatalf("Failed to setup a listener - %v\n", err)
+		log.Fatalf("Could not setup a socket and listen on port: %s\n", err)
 	}
-	defer ln.Close()
+	defer sock.Close()
 
 	for {
-		// accept connection
-		conn, err := ln.Accept()
+		// accept any client connection
+		conn, err := sock.Accept()
 		if err != nil {
-			log.Fatalf("Failed to accept connection - %v\n", err)
+			log.Fatalf("Could not connect to client - %s\n", err)
 		}
 		// Close connection when this function ends
 		defer conn.Close()
 
-		reader := bufio.NewReaderSize(conn, RECV_BUFFER_SIZE)
+		// setup a reader to continuously read packets from the connection to a buffer so that we can print immediately
+		// reader w/ buffer of size RECV_BUFFER_SIZE
+		inp_stream := bufio.NewReaderSize(conn, RECV_BUFFER_SIZE)
 		buffer := make([]byte, RECV_BUFFER_SIZE)
 
+		// for loop handles when entire data is too long to be sent in one go, so it's sent in chunks
 		for {
-			num_bytes, err := reader.Read(buffer)
+			// reads bytes from connection (up to RECV_BUFFER_SIZE) and stores them in buffer
+			num_rec_bytes, err := inp_stream.Read(buffer)
 
-			// keep reading until we hit an EOF
+			// EOF tells us we read everything
 			if err == io.EOF {
 				break
 			}
 			if err != nil {
-				log.Fatalf("Failed to read %v\n", err)
+				log.Fatalf("Error receiving client data: %s\n", err)
 			}
-			fmt.Print(string(buffer[:num_bytes]))
+			// print all the bytes we received as soon as we receive them to stdout
+			fmt.Print(string(buffer[:num_rec_bytes]))
 		}
 	}
 }

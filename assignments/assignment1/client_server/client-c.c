@@ -35,7 +35,7 @@ int client(char *server_ip, char *server_port)
 
   if ((rv = getaddrinfo(server_ip, server_port, &hints, &servinfo)) != 0)
   {
-    fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+    fprintf(stderr, "client getaddrinfo error: %s\n", gai_strerror(rv));
     return 1;
   }
 
@@ -45,14 +45,14 @@ int client(char *server_ip, char *server_port)
     if ((sockfd = socket(p->ai_family, p->ai_socktype,
                          p->ai_protocol)) == -1)
     {
-      perror("client: socket");
+      perror("client: socket() error");
       continue;
     }
 
     if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1)
     {
       close(sockfd);
-      perror("client: connect");
+      perror("client: connect() error");
       continue;
     }
 
@@ -61,13 +61,13 @@ int client(char *server_ip, char *server_port)
 
   if (p == NULL)
   {
-    fprintf(stderr, "client: failed to connect\n");
+    fprintf(stderr, "client: failed to connect to a server\n");
     return 2;
   }
 
   freeaddrinfo(servinfo); // all done with this structure
 
-  // while (fgets(buffer, SEND_BUFFER_SIZE, stdin) != NULL)
+  // keep reading bytes from stdin until we have read everything. For each chunk, send it immediately to server
   while ((bytes_read = fread(buffer, sizeof(char), SEND_BUFFER_SIZE, stdin)))
   {
     // fwrite(buffer, 1, bytes_read, stdout);
