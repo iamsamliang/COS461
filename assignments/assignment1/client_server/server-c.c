@@ -42,7 +42,7 @@ int server(char *server_port)
   struct addrinfo *p;
   int sockfd; // socket to listen on
   int new_fd; // accept returns new socket descriptor each time while old one keeps listening
-  struct sigaction sa;
+  // struct sigaction sa;
   struct sockaddr_storage their_addr;
   socklen_t sin_size;
   int yes = 1;
