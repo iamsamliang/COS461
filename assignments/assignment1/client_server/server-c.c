@@ -18,16 +18,16 @@
 #define QUEUE_LENGTH 10
 #define RECV_BUFFER_SIZE 2048
 
-void sigchld_handler(int s)
-{
-  // waitpid() might overwrite errno, so we save and restore it:
-  int saved_errno = errno;
+// void sigchld_handler(int s)
+// {
+//   // waitpid() might overwrite errno, so we save and restore it:
+//   int saved_errno = errno;
 
-  while (waitpid(-1, NULL, WNOHANG) > 0)
-    ;
+//   while (waitpid(-1, NULL, WNOHANG) > 0)
+//     ;
 
-  errno = saved_errno;
-}
+//   errno = saved_errno;
+// }
 
 /* TODO: server()
  * Open socket and wait for client to connect
@@ -103,14 +103,14 @@ int server(char *server_port)
     return 1;
   }
 
-  sa.sa_handler = sigchld_handler; // reap all dead processes
-  sigemptyset(&sa.sa_mask);
-  sa.sa_flags = SA_RESTART;
-  if (sigaction(SIGCHLD, &sa, NULL) == -1)
-  {
-    perror("sigaction");
-    return 1;
-  }
+  // sa.sa_handler = sigchld_handler; // reap all dead processes
+  // sigemptyset(&sa.sa_mask);
+  // sa.sa_flags = SA_RESTART;
+  // if (sigaction(SIGCHLD, &sa, NULL) == -1)
+  // {
+  //   perror("sigaction");
+  //   return 1;
+  // }
 
   printf("server: waiting for connections...\n");
 
