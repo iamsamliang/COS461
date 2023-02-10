@@ -27,6 +27,7 @@ int client(char *server_ip, char *server_port)
   char buffer[SEND_BUFFER_SIZE];
   struct addrinfo hints, *servinfo, *p;
   int rv;
+  size_t bytes_read;
 
   memset(&hints, 0, sizeof hints);
   hints.ai_family = AF_UNSPEC;
@@ -66,11 +67,12 @@ int client(char *server_ip, char *server_port)
 
   freeaddrinfo(servinfo); // all done with this structure
 
-  while (fgets(buffer, SEND_BUFFER_SIZE, stdin) != NULL)
+  // while (fgets(buffer, SEND_BUFFER_SIZE, stdin) != NULL)
+  while ((bytes_read = fread(buffer, sizeof(char), SEND_BUFFER_SIZE, stdin)))
   {
-    // TODO: should this return failure???
-    printf("%s", buffer);
-    if (send(sockfd, buffer, SEND_BUFFER_SIZE, 0) == -1)
+    // fwrite(buffer, 1, bytes_read, stdout);
+    // fflush(stdout);
+    if (send(sockfd, buffer, bytes_read, 0) == -1)
     {
       perror("error with sending data to server");
       close(sockfd);

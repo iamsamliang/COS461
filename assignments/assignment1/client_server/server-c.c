@@ -132,6 +132,33 @@ int server(char *server_port)
     //           s, sizeof s);
     // printf("server: got connection from %s\n", s);
 
+    // if (!fork())
+    // {                // this is the child process
+    //   close(sockfd); // child doesn't need the listener
+    //   while (1)
+    //   {
+    //     // memset(buffer, 0, RECV_BUFFER_SIZE);
+    //     num_rec_bytes = recv(new_fd, buffer, RECV_BUFFER_SIZE, 0);
+
+    //     // TODO: should this return failure???
+    //     if (num_rec_bytes == -1)
+    //     {
+    //       perror("error with receiving client data");
+    //     }
+    //     else if (num_rec_bytes == 0)
+    //     {
+    //       break;
+    //     }
+    //     else
+    //     {
+    //       fwrite(buffer, 1, num_rec_bytes, stdout);
+    //       fflush(stdout);
+    //     }
+    //   }
+    //   close(new_fd);
+    //   exit(0);
+    // }
+
     while (1)
     {
       // memset(buffer, 0, RECV_BUFFER_SIZE);
@@ -156,28 +183,6 @@ int server(char *server_port)
         // fprintf(stdout, "%s", buffer);
       }
     }
-
-    // fflush(stdout);
-
-    // fwrite('\0', 1, 1, stdout);
-
-    // if ((numbytes = recv(sockfd, buffer, SEND_BUFFER_SIZE - 1, 0)) == -1)
-    // {
-    //   perror("recv");
-    //   exit(1);
-    // }
-
-    // buf[numbytes] = '\0';
-
-    // do not need to fork new process for this assignment
-    // if (!fork())
-    // {                // this is the child process
-    //   close(sockfd); // child doesn't need the listener
-    //   if (recv(new_fd, "Hello, world!", RECV_BUFFER_SIZE, 0) == -1)
-    //     perror("send");
-    //   close(new_fd);
-    //   exit(0);
-    // }
 
     close(new_fd); // parent doesn't need this
   }
