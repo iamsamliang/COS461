@@ -72,16 +72,33 @@ func handler(w http.ResponseWriter, req *http.Request) {
 	}
 	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
+	b := make([]byte, 0, 512)
+	for {
+		if len(b) == cap(b) {
+			// Add more capacity (let append pick how much).
+			b = append(b, 0)[:len(b)]
+		}
+		n, err := resp.Body.Read(b[len(b):cap(b)])
+		b = b[:len(b)+n]
+		if err != nil {
+			if err == io.EOF {
+				err = nil
+				break
+			}
+		}
+	}
+
+	// resp.Body.Read(body)
+
+	// body, _ := io.ReadAll(resp.Body)
 
 	// Set the Connection header to "close".
 	w.Header().Set("Connection", "close")
 
 	// Send the server response to the client
 	// return the entire response\
-	w.Write(body)
+	w.Write(b)
 	// resp.Write(body)
-
 }
 
 func handleRequest(conn net.Conn) {
