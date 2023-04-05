@@ -17,20 +17,17 @@ import (
 )
 
 func handler(w http.ResponseWriter, req *http.Request) {
-	fmt.Println("In handler method")
 	if req.Method != "GET" {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	fmt.Println("Absolute URL: ", req.URL.String())
-	relative_url := req.URL.Path
-	fmt.Println("relative url: ", relative_url)
-	header := req.Header
-	fmt.Println("Original request header: ", header)
+	// fmt.Println("Absolute URL: ", req.URL.String())
+	// relative_url := req.URL.Path
+	// fmt.Println("relative url: ", req.URL.Path)
 
 	// this URL should be a relative URL and not the absolute URL
-	new_req, err := http.NewRequest("GET", relative_url, nil)
+	new_req, err := http.NewRequest("GET", req.URL.Path, nil)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		log.Fatalf("Error creating request: ", err)
@@ -40,22 +37,30 @@ func handler(w http.ResponseWriter, req *http.Request) {
 	// new_req.URL, _ = url.Parse(req.URL.Path)
 
 	// Set the header values in the new request
-	for key, values := range header {
-		fmt.Println("Key: ", key)
+	for key, values := range req.Header {
 		for _, value := range values {
 			new_req.Header.Add(key, value)
 		}
 	}
 
-	new_req.Header.Add("Host", req.Host)
+	// new_req.Header.Add("Host", req.Host)
+	// new_req.Header.Add("Scheme", req.URL.Scheme)
 	// new_req.Header.Add("Proto", "HTTP/1.1")
-	fmt.Println("new request header: ", new_req.Header)
-	new_req.Host = req.Host
-	fmt.Println("host: ", new_req.Host)
+	// fmt.Println("new request header: ", new_req.Header)
+
+	new_req.URL.Scheme = req.URL.Scheme
+	new_req.URL.Host = req.Host
+	// new_req.Host = req.Host
 	new_req.Close = true
 	new_req.Proto = req.Proto
-	new_req.ProtoMajor = 1
-	new_req.ProtoMinor = 1
+
+	// reqDump, err := httputil.DumpRequest(new_req, true)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// fmt.Printf("REQUEST:\n%s", string(reqDump))
+	// fmt.Println()
 
 	// Send our modified request to the server and receive the server response
 	proxy_client := &http.Client{}
@@ -67,9 +72,13 @@ func handler(w http.ResponseWriter, req *http.Request) {
 	}
 	defer resp.Body.Close()
 
+	// Set the Connection header to "close".
+	w.Header().Set("Connection", "close")
+
 	// Send the server response to the client
 	// return the entire response
 	resp.Write(w)
+
 }
 
 func handleRequest(conn net.Conn) {
@@ -92,21 +101,22 @@ func proxy(server_port string) {
 	fmt.Println("Server listening on " + server_port)
 
 	// ASK: HTTP 1.1 specifies that all HTTP requests must have the Host header explicitly, but assignment assumes there is no such condition?
-	http.ListenAndServe(":"+server_port, nil)
+	// http.ListenAndServe(":"+server_port, nil)
 
 	// Create a new HTTP server
-	// server := &http.Server{Addr: ":" + server_port}
+	server := &http.Server{Addr: ":" + server_port}
 
-	// // Listen and serve HTTP requests
-	// err := server.ListenAndServe()
-	// if err != nil {
-	// 	log.Fatalf("Error with starting proxy server: ", err)
-	// }
+	// Listen and serve HTTP requests
+	err := server.ListenAndServe()
+	if err != nil {
+		log.Fatalf("Error with starting proxy server: ", err)
+	}
 
-	// err = server.Shutdown(nil)
-	// if err != nil {
-	// 	log.Fatalf("Error closing connection: ", err)
-	// }
+	fmt.Println("Closing server connection")
+	err = server.Close()
+	if err != nil {
+		log.Fatalf("Error closing connection: ", err)
+	}
 }
 
 // // listen on 127.0.0.1 on port server_port for client connections
