@@ -8,7 +8,7 @@ package main
 
 import (
 	"bufio"
-	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -72,12 +72,15 @@ func handler(w http.ResponseWriter, req *http.Request) {
 	}
 	defer resp.Body.Close()
 
+	body, _ := io.ReadAll(resp.Body)
+
 	// Set the Connection header to "close".
 	w.Header().Set("Connection", "close")
 
 	// Send the server response to the client
-	// return the entire response
-	resp.Write(w)
+	// return the entire response\
+	w.Write(body)
+	// resp.Write(body)
 
 }
 
@@ -98,7 +101,6 @@ func handleRequest(conn net.Conn) {
 // TODO: implement an HTTP proxy
 func proxy(server_port string) {
 	http.HandleFunc("/", handler)
-	fmt.Println("Server listening on " + server_port)
 
 	// ASK: HTTP 1.1 specifies that all HTTP requests must have the Host header explicitly, but assignment assumes there is no such condition?
 	// http.ListenAndServe(":"+server_port, nil)
