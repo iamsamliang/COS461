@@ -111,12 +111,6 @@ func proxy(server_port string) {
 	if err != nil {
 		log.Fatalf("Error with starting proxy server: ", err)
 	}
-
-	fmt.Println("Closing server connection")
-	err = server.Close()
-	if err != nil {
-		log.Fatalf("Error closing connection: ", err)
-	}
 }
 
 // // listen on 127.0.0.1 on port server_port for client connections
