@@ -16,6 +16,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"io"
 	"io/ioutil"
 	"log"
 	"net"
@@ -111,13 +112,17 @@ func handleRequest(conn net.Conn, reader *bufio.Reader) {
 	}
 
 	// DNS fetching
-	body, err := ioutil.ReadAll(resp.Body)
+	body := new(bytes.Buffer)
+	_, err = io.Copy(body, resp.Body)
+
 	if err != nil {
 		return_error(conn)
 		return
 	}
 
-	graph, err := html.Parse(bytes.NewReader(body))
+	resp.Body.Close()
+
+	graph, err := html.Parse(body)
 
 	if err != nil {
 		return_error(conn)
@@ -127,14 +132,13 @@ func handleRequest(conn net.Conn, reader *bufio.Reader) {
 	go fetchDNS(graph)
 
 	// return the entire response to the client
-	_, err = conn.Write(body)
+	err = resp.Write(conn)
 
 	if err != nil {
 		return_error(conn)
 		return
 	}
 
-	resp.Body.Close()
 	conn.Close()
 }
 
