@@ -15,6 +15,8 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	"io"
 	"io/ioutil"
 	"log"
 	"net"
@@ -54,37 +56,33 @@ func fetchDNS(doc *html.Node) {
 	}
 }
 
+func return_error(conn net.Conn) {
+	// return a response with error
+	// if err is EOF I still return 500 error
+	// create response with 500 error
+	resp := &http.Response{
+		Status:     "500 Internal Server Error",
+		StatusCode: 500,
+		Body:       ioutil.NopCloser(strings.NewReader("")),
+		ProtoMajor: 1,
+		ProtoMinor: 1,
+	}
+	resp.Write(conn)
+	resp.Body.Close()
+	conn.Close()
+	return
+}
+
 func handleRequest(conn net.Conn, reader *bufio.Reader) {
 	req, err := http.ReadRequest(reader)
 	if err != nil {
-		// return a response with error
-		// if err is EOF I still return 500 error
-		// create response with 500 error
-		resp := &http.Response{
-			Status:     "500 Internal Server Error",
-			StatusCode: 500,
-			Body:       ioutil.NopCloser(strings.NewReader("")),
-			ProtoMajor: 1,
-			ProtoMinor: 1,
-		}
-		resp.Write(conn)
-		resp.Body.Close()
-		conn.Close()
+		return_error(conn)
 		return
 	}
 
 	if req.Method != "GET" {
 		// create response with 500 error
-		resp := &http.Response{
-			Status:     "500 Internal Server Error",
-			StatusCode: 500,
-			Body:       ioutil.NopCloser(strings.NewReader("")),
-			ProtoMajor: 1,
-			ProtoMinor: 1,
-		}
-		resp.Write(conn)
-		resp.Body.Close()
-		conn.Close()
+		return_error(conn)
 		return
 	}
 
@@ -109,45 +107,34 @@ func handleRequest(conn net.Conn, reader *bufio.Reader) {
 	resp, err := tsp.RoundTrip(req)
 
 	if err != nil {
-		// return a response with error
-		// if err is EOF I still return 500 error
-		// create response with 500 error
-		resp := &http.Response{
-			Status:     "500 Internal Server Error",
-			StatusCode: 500,
-			Body:       ioutil.NopCloser(strings.NewReader("")),
-			ProtoMajor: 1,
-			ProtoMinor: 1,
-		}
-		resp.Write(conn)
-		resp.Body.Close()
-		conn.Close()
+		return_error(conn)
 		return
 	}
 
 	// DNS fetching
-	graph, err := html.Parse(resp.Body)
-	go fetchDNS(graph)
-
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		// return a response with error
-		// if err is EOF I still return 500 error
-		// create response with 500 error
-		resp := &http.Response{
-			Status:     "500 Internal Server Error",
-			StatusCode: 500,
-			Body:       ioutil.NopCloser(strings.NewReader("")),
-			ProtoMajor: 1,
-			ProtoMinor: 1,
-		}
-		resp.Write(conn)
-		resp.Body.Close()
-		conn.Close()
+		return_error(conn)
 		return
 	}
 
+	graph, err := html.Parse(bytes.NewReader(body))
+
+	if err != nil {
+		return_error(conn)
+		return
+	}
+
+	go fetchDNS(graph)
+
 	// return the entire response to the client
-	resp.Write(conn)
+	_, err = conn.Write(body)
+
+	if err != nil {
+		return_error(conn)
+		return
+	}
+
 	resp.Body.Close()
 	conn.Close()
 }
