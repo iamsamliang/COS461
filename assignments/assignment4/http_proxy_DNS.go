@@ -16,7 +16,6 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -117,7 +116,7 @@ func handleRequest(conn net.Conn, reader *bufio.Reader) {
 	_, err = io.Copy(body, resp.Body)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("after copy", err)
 		return_error(conn)
 		return
 	}
@@ -127,6 +126,7 @@ func handleRequest(conn net.Conn, reader *bufio.Reader) {
 	graph, err := html.Parse(body)
 
 	if err != nil {
+		log.Printf("after parse", err)
 		return_error(conn)
 		return
 	}
@@ -137,6 +137,7 @@ func handleRequest(conn net.Conn, reader *bufio.Reader) {
 	err = resp.Write(conn)
 
 	if err != nil {
+		log.Printf("after write", err)
 		return_error(conn)
 		return
 	}
