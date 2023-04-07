@@ -126,7 +126,7 @@ func handleRequest(conn net.Conn, reader *bufio.Reader) {
 	}
 
 	// DNS fetching
-	graph, err := html.Parse(resp)
+	graph, err := html.Parse(resp.Body)
 	go fetchDNS(graph)
 
 	if err != nil {
