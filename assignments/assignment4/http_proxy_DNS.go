@@ -18,10 +18,11 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"net/html"
 	"net/http"
 	"os"
 	"strings"
+
+	"golang.org/x/net/html"
 )
 
 func fetchDNS(doc *html.Node) {
