@@ -129,6 +129,8 @@ func handleRequest(conn net.Conn, reader *bufio.Reader) {
 
 	go fetchDNS(graph)
 
+	resp.Body = ioutil.NopCloser(bytes.NewReader(body.Bytes()))
+
 	// return the entire response to the client
 	err = resp.Write(conn)
 
