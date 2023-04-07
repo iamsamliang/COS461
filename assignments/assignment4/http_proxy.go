@@ -147,17 +147,52 @@ func handleRequest(conn net.Conn, reader *bufio.Reader) {
 	// new_req.URL, _ = url.Parse(req.URL.Path)
 
 	// not allowed to have RequestURI set when doing a client request.
-	req.RequestURI = ""
+	// req.RequestURI = ""
 
 	// relative URL
-	req.URL.Path = req.URL.String()[strings.Index(req.URL.String()[8:], "/")+8:]
+	// req.URL.Path = req.URL.String()[strings.Index(req.URL.String()[8:], "/")+8:]
 	// req.URL, _ = url.Parse(req.URL.Path)
 	// req.Close = true // new_req.Header.Set("Connection", "close")
 	req.Header.Set("Connection", "close")
+	// // new_req.Header.Add("Scheme", req.URL.Scheme)
+	// // new_req.Header.Add("Proto", "HTTP/1.1")
+
+	// new_req.Close = true // new_req.Header.Set("Connection", "close")
+	req.Proto = "HTTP/1.1"
+	req.ProtoMajor = 1
+	req.ProtoMinor = 1
 
 	// Send our modified request to the server and receive the server response
 	// proxy_client := &http.Client{}
 	// resp, err := proxy_client.Do(req)
+
+	// Connect to the server w/ server_ip at server_port
+	// server_conn, err := net.Dial("tcp", req.URL.String()+":80")
+	// if err != nil {
+	// 	// create response with 500 error
+	// 	resp := &http.Response{
+	// 		Status:     "500 Internal Server Error",
+	// 		StatusCode: 500,
+	// 		Body:       ioutil.NopCloser(strings.NewReader("")),
+	// 		ProtoMajor: 1,
+	// 		ProtoMinor: 1,
+	// 	}
+	// 	resp.Write(conn)
+	// 	resp.Body.Close()
+	// 	conn.Close()
+	// 	return
+	// }
+
+	// maybe create an io.Writer via server_conn
+	// req.Write(server_conn)
+
+	// server_conn.Read()
+
+	// create a buffer to store the data from stdin so we can immediately send it to server
+	// create a reader to read from stdin and put the data in buffer. Read at most SEND_BUFFER_SIZE
+	// buffer := make([]byte, SEND_BUFFER_SIZE)
+	// inp_stream := bufio.NewReaderSize(os.Stdin, SEND_BUFFER_SIZE)
+
 	tsp := &http.Transport{}
 	resp, err := tsp.RoundTrip(req)
 
