@@ -16,6 +16,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -116,6 +117,7 @@ func handleRequest(conn net.Conn, reader *bufio.Reader) {
 	_, err = io.Copy(body, resp.Body)
 
 	if err != nil {
+		fmt.Println(err)
 		return_error(conn)
 		return
 	}
