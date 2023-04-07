@@ -144,17 +144,23 @@ func handleRequest(conn net.Conn, reader *bufio.Reader) {
 		return
 	}
 
-	// this URL should be a relative URL and not the absolute URL
-
 	// new_req.URL, _ = url.Parse(req.URL.Path)
 
 	// not allowed to have RequestURI set when doing a client request.
 	req.RequestURI = ""
-	req.Close = true // new_req.Header.Set("Connection", "close")
+
+	// relative URL
+	req.URL.Path = req.URL.String()[strings.Index(req.URL.String()[8:], "/")+8:]
+	// req.URL, _ = url.Parse(req.URL.Path)
+	// req.Close = true // new_req.Header.Set("Connection", "close")
+	req.Header.Set("Connection", "close")
 
 	// Send our modified request to the server and receive the server response
-	proxy_client := &http.Client{}
-	resp, err := proxy_client.Do(req)
+	// proxy_client := &http.Client{}
+	// resp, err := proxy_client.Do(req)
+	tsp := &http.Transport{}
+	resp, err := tsp.RoundTrip(req)
+
 	if err != nil {
 		// return a response with error
 		// if err is EOF I still return 500 error
@@ -205,7 +211,7 @@ func proxy(server_port string) {
 		// setup a reader to continuously read packets from the connection to a buffer so that we can print immediately
 		// reader w/ buffer of size RECV_BUFFER_SIZE
 		inp_stream := bufio.NewReader(conn)
-		handleRequest(conn, inp_stream)
+		go handleRequest(conn, inp_stream)
 
 		// buffer := make([]byte, 4096)
 
