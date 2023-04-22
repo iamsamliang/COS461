@@ -36,7 +36,7 @@ func fetchDNS(doc *html.Node) {
 		node := nodes[num_nodes-1]
 		nodes = nodes[:num_nodes-1]
 
-		//
+		// node is elementnode and of type a. If so, check if it has href attribute and DNS fetch
 		if node.Type == html.ElementNode && node.Data == "a" {
 			for _, attr := range node.Attr {
 				if attr.Key == "href" {
